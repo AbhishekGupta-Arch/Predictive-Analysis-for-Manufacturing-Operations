@@ -5,6 +5,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, f1_score
 from pydantic import BaseModel
+import io
 
 app = FastAPI()
 
@@ -15,14 +16,14 @@ model=None
 
 
 @app.post("/upload")
-async def upload_file(file: UploadFile = File("Machine Downtime.csv")):
+async def upload_file(file: UploadFile = File(...)):
     global data
     if not file.filename.endswith('.csv'):
         raise HTTPException(status_code=400, detail="File must be a CSV.")
 
     try:
         contents =await file.read()
-        data=pd.read_csv(pd.compat.StringIO(contents.decode('utf-8')))
+        data = pd.read_csv(io.StringIO(contents.decode('utf-8')))
         return{"message":"File Uploaded successfully,","columns":list(data.columns)}
     except Exception as e:
         raise HTTPException(status_code=500,detail= str(e))
@@ -39,7 +40,7 @@ async def train_model():
         if 'DownTime_Flag' not in data.columns:
             raise HTTPException(status_code=400,detail="Data must contain 'DownTime_Flag' column.")
         
-        x = data.drop(columns=['DownTime_Flag'])
+        x = data.drop(columns=['DownTime_Flag','Machine_ID'])
         y = data['DownTime_Flag']
 
         x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
