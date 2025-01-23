@@ -52,7 +52,7 @@ async def train_model():
         accuracy = accuracy_score(y_test, y_pred)
         f1 = f1_score(y_test, y_pred, average='weighted')
 
-        with open("model.pk1","wb")as f:
+        with open("model.pkl","wb")as f:
             pickle.dump(model,f)
 
             return{"message":"Model trained Successfully.", "accuracy":accuracy,"f1_score":f1}
@@ -74,7 +74,8 @@ async def predict(request: PredictRequest):
     try:
         input_data = pd.DataFrame([request.dict()])
         prediction = model.predict(input_data)[0]
+        print(prediction)
         confidence = max(model.predict_proba(input_data)[0])
-        return{"DownTime":"Yes" if prediction else "No","Confidence": confidence}
+        return{"DownTime":"Yes" if prediction == 1 else "No","Confidence": confidence}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
